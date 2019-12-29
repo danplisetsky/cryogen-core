@@ -449,6 +449,21 @@
                                      :post           home-page
                                      :page           home-page})))))
 
+(defn compile-additional-html
+  [{:keys [blog-prefix compile-html] :as params}]
+  (doseq [html-file compile-html]
+    (println "-->" (cyan html-file))
+    ; set `:clean-urls` to `:dirty` to get the correct uri, e.g.: /404.html
+    (let [params-html (assoc params :clean-urls :dirty)
+          uri (page-uri (str html-file ".html") params-html)]
+      (write-html uri
+                  params-html
+                  (render-file (str "/html/" html-file ".html")
+                               (merge params-html
+                                      {:active-page    html-file
+                                       :selmer/context (cryogen-io/path "/" blog-prefix "/")
+                                       :uri            uri}))))))
+
 (defn compile-archives
   "Compiles the archives page into html and spits it out into the public folder"
   [{:keys [blog-prefix] :as params} posts]
@@ -531,7 +546,8 @@
      (println (yellow "overriding config.edn with:"))
      (pprint overrides-and-hooks))
    (let [overrides    (dissoc overrides-and-hooks :extend-params-fn :update-article-fn)
-         {:keys [^String site-url blog-prefix rss-name recent-posts keep-files ignored-files previews? author-root-uri theme]
+         {:keys [^String site-url blog-prefix rss-name recent-posts keep-files
+                 ignored-files previews? author-root-uri theme compile-html copy-html]
           :as   config} (resolve-config overrides)
          posts        (->> (read-posts config)
                            (add-prev-next)
@@ -586,8 +602,11 @@
      (cryogen-io/wipe-public-folder keep-files)
      (println (blue "compiling sass"))
      (sass/compile-sass->css! config)
+     (when compile-html
+       (println (blue "compiling additional html"))
+       (compile-additional-html params))
      (println (blue "copying theme resources"))
-     (cryogen-io/copy-resources-from-theme config)
+     (cryogen-io/copy-resources-from-theme config (concat ["css" "js"] copy-html))
      (println (blue "copying resources"))
      (cryogen-io/copy-resources "content" config)
      (copy-resources-from-markup-folders config)

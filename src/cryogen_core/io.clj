@@ -95,12 +95,10 @@
 
 (defn copy-resources-from-theme
   "Copy resources from theme"
-  [config]
+  [config resources]
   (copy-resources
    (path "themes" (:theme config))
    (merge config
           {:resources (concat
-                       ["css"
-                        "js"
-                        "html/404.html"]
+                       resources
                        (:theme-resources config))})))
