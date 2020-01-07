@@ -475,7 +475,8 @@
                              (merge params
                                     {:active-page     "archives"
                                      :archives        true
-                                     :groups          (group-for-archive posts)
+                                     :posts           posts
+                                     ;:groups          (group-for-archive posts)
                                      :selmer/context  (cryogen-io/path "/" blog-prefix "/")
                                      :uri             uri})))))
 
@@ -612,15 +613,16 @@
      (copy-resources-from-markup-folders config)
      (compile-pages params other-pages)
      (compile-posts params posts)
-     (compile-tags params posts-by-tag)
-     (compile-tags-page params)
+     ;(compile-tags params posts-by-tag)
+     ;(compile-tags-page params)
      (if previews?
        (compile-preview-pages params posts)
        (compile-index params))
      (compile-archives params posts)
      (when author-root-uri
        (println (blue "generating authors views"))
-       (compile-authors params posts))
+       ;(compile-authors params posts)
+       )
      (println (blue "generating site map"))
      (->> (sitemap/generate site-url ignored-files)
           (cryogen-io/create-file (cryogen-io/path "/" blog-prefix "sitemap.xml")))
