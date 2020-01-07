@@ -36,7 +36,7 @@
 (defn find-entries
   "Returns a list of files under the content directory according to the
   implemented Markup protocol and specified root directory. It defaults to
-  looking under the implemented protocol's subdirectory, but fallsback to look
+  looking under the implemented protocol's subdirectory, but falls back to look
   at the content directory."
   [root mu ignored-files]
   (let [assets (cryogen-io/find-assets
