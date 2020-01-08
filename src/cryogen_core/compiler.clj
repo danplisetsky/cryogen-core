@@ -601,33 +601,41 @@
 
      (set-custom-resource-path! (cryogen-io/path "file:themes" theme))
      (cryogen-io/set-public-path! (:public-dest config))
-
      (cryogen-io/wipe-public-folder keep-files)
+
      (println (blue "compiling sass"))
      (sass/compile-sass->css! config)
+
      (when compile-html
        (println (blue "compiling additional html"))
        (compile-additional-html params))
+
      (println (blue "copying theme resources"))
      (cryogen-io/copy-resources-from-theme config (concat ["css" "js"] copy-html))
+
      (println (blue "copying resources"))
      (cryogen-io/copy-resources "content" config)
+
      (copy-resources-from-markup-folders config)
      (compile-pages params other-pages)
      (compile-posts params posts)
      ;(compile-tags params posts-by-tag)
      ;(compile-tags-page params)
+
      (if previews?
        (compile-preview-pages params posts)
        (compile-index params))
+
      (compile-archives params posts)
+
      (when author-root-uri
        (println (blue "generating authors views"))
-       ;(compile-authors params posts)
-       )
+       (compile-authors params posts))
+
      (println (blue "generating site map"))
      (->> (sitemap/generate site-url ignored-files)
           (cryogen-io/create-file (cryogen-io/path "/" blog-prefix "sitemap.xml")))
+
      (println (blue "generating main rss"))
      (->> (rss/make-channel config posts)
           (cryogen-io/create-file (cryogen-io/path "/" blog-prefix rss-name)))
