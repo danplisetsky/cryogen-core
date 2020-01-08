@@ -645,11 +645,11 @@
 (defn compile-assets-timed
   "See the docstring for [[compile-assets]]"
   ([] (compile-assets-timed nil))
-  ([config]
+  ([config-or-function]
    (time
     (try
-      (if config
-        (compile-assets config)
+      (if config-or-function
+        (compile-assets (if (fn? config-or-function) (config-or-function) config-or-function))
         (compile-assets))
       (catch Exception e
         (if (or (instance? IllegalArgumentException e)
