@@ -545,12 +545,11 @@
             update-article-fn (fn [article _] article)}
      :as   overrides-and-hooks}]
    (println (green "compiling assets..."))
-   (when-not (empty? overrides-and-hooks)
-     (println (yellow "overriding config.edn with:"))
-     (pprint overrides-and-hooks))
+
    (let [overrides    (dissoc overrides-and-hooks :extend-params-fn :update-article-fn)
          {:keys [^String site-url blog-prefix rss-name recent-posts keep-files
-                 ignored-files previews? author-root-uri theme compile-html copy-html]
+                 ignored-files previews? author-root-uri theme compile-html copy-html
+                 print-overrides?]
           :as   config} (resolve-config overrides)
          posts        (->> (read-posts config)
                            (add-prev-next)
@@ -598,6 +597,10 @@
                          :posts-by-tag posts-by-tag
                          :navbar-pages navbar-pages
                          :sidebar-pages sidebar-pages})]
+
+     (when (and (not-empty overrides-and-hooks) print-overrides?)
+       (println (yellow "overriding config.edn with:"))
+       (pprint overrides-and-hooks))
 
      (set-custom-resource-path! (cryogen-io/path "file:themes" theme))
      (cryogen-io/set-public-path! (:public-dest config))

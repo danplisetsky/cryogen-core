@@ -63,4 +63,5 @@
    (s/optional-key :debug?)               s/Bool
    :copy-html                             [s/Str]
    (s/optional-key :compile-html)         [s/Str]
+   (s/optional-key :print-overrides?)     s/Bool
    s/Keyword                              s/Any})
