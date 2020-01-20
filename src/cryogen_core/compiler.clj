@@ -624,8 +624,8 @@
      (copy-resources-from-markup-folders config)
      (compile-pages params other-pages)
      (compile-posts params posts)
-     ;(compile-tags params posts-by-tag)
-     ;(compile-tags-page params)
+     (compile-tags params posts-by-tag)
+     (compile-tags-page params)
 
      (if previews?
        (compile-preview-pages params posts)
