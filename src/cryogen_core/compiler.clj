@@ -7,7 +7,6 @@
             [net.cgrand.enlive-html :as enlive]
             [schema.core :as s]
             [selmer.parser :refer [cache-off!]]
-            [selmer.util :refer [set-custom-resource-path!]]
             [text-decoration.core :refer :all]
             [cryogen-core.io :as cryogen-io]
             [cryogen-core.config :refer [resolve-config]]
@@ -36,7 +35,7 @@
 (defn find-entries
   "Returns a list of files under the content directory according to the
   implemented Markup protocol and specified root directory. It defaults to
-  looking under the implemented protocol's subdirectory, but falls back to look
+  looking under the implemented protocol's subdirectory, but fallsback to look
   at the content directory."
   [root mu ignored-files]
   (let [assets (cryogen-io/find-assets
@@ -97,16 +96,16 @@
   the file with the given markup."
   [^java.io.File page config markup]
   (with-open [rdr (java.io.PushbackReader. (io/reader page))]
-    (let [re-root   (re-pattern (str "^.*?(" (:page-root config) "|" (:post-root config) ")/"))
-          page-fwd  (string/replace (str page) "\\" "/")    ;; make it work on Windows
-          page-name (if (:collapse-subdirs? config) (.getName page) (string/replace page-fwd re-root ""))
-          file-name (string/replace page-name (re-pattern-from-ext (m/ext markup)) ".html")
-          page-meta (read-page-meta page-name rdr)
-          content   ((m/render-fn markup) rdr config)
-          content-dom (enlive/html-resource (StringReader. content))]
-      {:file-name file-name
-       :page-meta page-meta
-       :content-dom   content-dom})))
+    (let [re-root     (re-pattern (str "^.*?(" (:page-root config) "|" (:post-root config) ")/"))
+          page-fwd    (string/replace (str page) "\\" "/")  ;; make it work on Windows
+          page-name   (if (:collapse-subdirs? config) (.getName page) (string/replace page-fwd re-root ""))
+          file-name   (string/replace page-name (re-pattern-from-ext (m/ext markup)) ".html")
+          page-meta   (read-page-meta page-name rdr)
+          content     ((m/render-fn markup) rdr config)
+          content-dom (util/trimmed-html-snippet content)]
+      {:file-name   file-name
+       :page-meta   page-meta
+       :content-dom content-dom})))
 
 (defn add-toc
   "Adds :toc to article, if necessary"
@@ -133,7 +132,8 @@
   (let [{:keys [file-name page-meta content-dom]} (page-content page config markup)]
     (-> (merge-meta-and-content file-name (update page-meta :layout #(or % :page)) content-dom)
         (merge
-          {:uri           (page-uri file-name :page-root-uri config)
+          {:type          :page
+           :uri           (page-uri file-name :page-root-uri config)
            :page-index    (:page-index page-meta)
            :klipse/global (:klipse config)
            :klipse/local  (:klipse page-meta)})
@@ -150,7 +150,8 @@
           formatted-group (.format archive-fmt date)]
       (-> (merge-meta-and-content file-name (update page-meta :layout #(or % :post)) content-dom)
           (merge
-            {:date                    date
+            {:type                    :post
+             :date                    date
              :formatted-archive-group formatted-group
              :parsed-archive-group    (.parse archive-fmt formatted-group)
              :uri                     (page-uri file-name :post-root-uri config)
@@ -446,12 +447,11 @@
                 params
                 (render-file (str "/html/" (:layout home-page))
                              (merge params
-                                    {:active-page    "home"
-                                     :home           true
-                                     :selmer/context (cryogen-io/path "/" blog-prefix "/")
-                                     :uri            uri
-                                     :post           home-page
-                                     :page           home-page})))))
+                                    {:active-page       "home"
+                                     :home              true
+                                     :selmer/context    (cryogen-io/path "/" blog-prefix "/")
+                                     :uri               uri
+                                     (:type home-page)  home-page})))))
 
 (defn compile-additional-html
   [{:keys [blog-prefix compile-html] :as params}]
@@ -604,7 +604,8 @@
        (println (yellow "overriding config.edn with:"))
        (pprint overrides-and-hooks))
 
-     (set-custom-resource-path! (cryogen-io/path "file:themes" theme))
+     (selmer.parser/set-resource-path!
+       (.getAbsolutePath ^java.io.File (io/as-file (cryogen-io/path "themes" theme))))
      (cryogen-io/set-public-path! (:public-dest config))
      (cryogen-io/wipe-public-folder keep-files)
 
