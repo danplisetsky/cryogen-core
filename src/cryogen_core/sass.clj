@@ -2,7 +2,8 @@
   (:require [clojure.java.io :as io]
             [clojure.java.shell :as shell]
             [text-decoration.core :refer :all]
-            [cryogen-core.io :as cryogen-io]))
+            [cryogen-core.io :as cryogen-io]
+            [clojure.string :as string]))
 
 (defmacro sh
   [& args]
@@ -26,13 +27,14 @@
 
 (defn compile-sass-dir!
   "Given a sass directory (or file), output the resulting CSS in the
-   same dir. All error handling is done by sh / launching the sass
+   css dir. Don't output source-maps.
+   All error handling is done by sh / launching the sass
    command."
-  [{:keys [sass-dir sass-path]}]
+  [{:keys [sass-dir output-sass-dir sass-path]}]
   (shell/with-sh-dir
     "."
-    (let [sass-argument (str sass-dir ":" sass-dir)]
-      (sh sass-path "--update" sass-argument))))
+    (let [sass-argument (str sass-dir ":" output-sass-dir)]
+      (sh sass-path "--update" "--no-source-map" "--style=compressed" sass-argument))))
 
 (defn compile-sass->css!
   "Given a directory or directories in sass-src, looks for all Sass files and compiles them.
@@ -47,10 +49,16 @@
                 " - You might want to install it here: sass-lang.com")))
     (doseq [sass-dir (concat
                       (map (partial cryogen-io/path "content") sass-src)
-                      (map (partial cryogen-io/path "themes" (:theme opts)) theme-sass-src))]
+                      (map (partial cryogen-io/path "themes" (:theme opts)) theme-sass-src))
+            :let [sass-dir-basename (-> (java.nio.file.Paths/get sass-dir (into-array String []))
+                                        .getFileName
+                                        .toString)
+                  output-sass-dir (string/replace sass-dir sass-dir-basename "css")]]
       (when (seq (find-sass-files sass-dir ignored-files))
-        (println "\t" (cyan sass-dir) "-->" (cyan sass-dir))
-        (let [result (compile-sass-dir! (assoc opts :sass-dir sass-dir))]
+        (println "\t" (cyan sass-dir) "-->" (cyan output-sass-dir))
+        (let [result (compile-sass-dir! (assoc opts
+                                               :sass-dir sass-dir
+                                               :output-sass-dir output-sass-dir))]
           (if-not (zero? (:exit result))
             (println (red (:err result))
                      (red (:out result)))))))))
