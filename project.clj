@@ -16,5 +16,6 @@
                            [pandect "0.6.1"]
                            [prismatic/schema "1.1.12"]
                            [selmer "1.12.18"]]
+            :deploy-branches ["develop"]
             :deploy-repositories [["snapshots" :clojars]
                                   ["releases" :clojars]])
