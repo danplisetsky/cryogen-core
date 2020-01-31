@@ -17,5 +17,6 @@
                            [prismatic/schema "1.1.12"]
                            [selmer "1.12.18"]]
             :deploy-branches ["develop"]
-            :deploy-repositories [["snapshots" :clojars]
-                                  ["releases" :clojars]])
+            :deploy-repositories ^:replace [["clojars" {:url "https://repo.clojars.org"
+                                              :username [:env/clojars_username :gpg]
+                                              :password [:env/clojars_password :gpg]}]])
