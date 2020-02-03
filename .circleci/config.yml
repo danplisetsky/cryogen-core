@@ -9,8 +9,8 @@ jobs:
       - image: circleci/clojure:lein-2.9.1
 
     branches:
-      only:
-        - develop
+      ignore:
+        - master
 
     steps:
       - checkout
